@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<!--
+  TEMPLATE: Issue / Bug Diagnosis Report — Vauxoo design system
+  Skill: issue-diagnosis-report
+
+  USAGE
+    1. Copy this file, replace every {{PLACEHOLDER}} with real data.
+    2. Render ALL client-facing text in the CLIENT'S language (e.g. Spanish for
+       a Mexican client). The English headings below are defaults — localize them.
+    3. Repeat the .phase-card block once per analyzed record, and the
+       .pending-item block once per offered option.
+
+  PLACEHOLDERS
+    {{CLIENT}}    → Client / company that owns the instance (e.g. "STILO CONCEPTO")
+    {{SUBJECT}}   → Records under analysis (e.g. "S03563 · S03515 — invoice status")
+    {{DATE}}      → Report date in the client's locale
+    {{ANALYST}}   → Author (e.g. "Nombre Apellido (PM · Vauxoo)")
+    {{VERSION}}   → Version / state (e.g. "Diagnosis v1.0")
+    {{INSTANCE}}  → Odoo instance/profile diagnosed (e.g. "stiloconcepto")
+
+  VERDICT BADGES (pick one for §1)
+    badge-green   → Not a bug / Expected behavior
+    badge-red     → Confirmed bug
+    badge-yellow  → Data / process issue (manual capture)
+    badge-blue    → Configuration / setup issue
+
+  ALERT CLASSES
+    alert-success  good news / expected behavior / fully reconciled
+    alert-warning  attention required / manual-process root cause
+    alert-danger   confirmed defect / risk (e.g. double billing)
+    alert-info     informational / reconciliation note
+-->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnosis — {{SUBJECT}} · {{CLIENT}}</title>
+<!--
+  Tipografía oficial (Sora títulos + Manrope cuerpo) auto-hospedada. El marcador
+  de abajo lo rellena `python resources/tools/vx_brand.py inline <archivo>` con
+  los WOFF2 del plugin brand-guide en base64. NUNCA un CDN de fuentes: cargarlas
+  desde Google filtra la IP de quien abre el documento (third-party-fonts).
+-->
+<!-- VX_FONTS -->
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--vx-font-secondary,'Manrope'), Arial, sans-serif; font-size: 10.5pt; color: var(--vx-color-negro-vauxoo); background: var(--vx-color-gris-recuadros); padding: 24px; }
+  .page { background: var(--vx-color-blanco); max-width: 860px; margin: 0 auto; padding: 40px 48px 48px; border: 1px solid var(--vx-color-gris-humo); }
+  :root {
+    /* Tokens oficiales — copia verbatim de vauxoo-brand.css (plugin brand-guide,
+       ai/brand-guide). Regenerar con: python resources/tools/vx_brand.py tokens */
+    --vx-font-primary:"Sora"; --vx-font-secondary:"Manrope";
+    --vx-color-azul-claro:#DCEFFE; --vx-color-blanco:#FFFFFF; --vx-color-dorado:#E4A900;
+    --vx-color-gris-claro:#95999F; --vx-color-gris-humo:#E0E0E0; --vx-color-gris-medio:#455A64;
+    --vx-color-gris-muy-claro:#F5F5F5; --vx-color-gris-oscuro:#393B49; --vx-color-gris-palido:#B3B3B3;
+    --vx-color-gris-recuadros:#F0F0F0; --vx-color-negro-suave:#27282F; --vx-color-negro-vauxoo:#282C2F;
+    --vx-color-rojo-hover-brillante:#E11E4D; --vx-color-rojo-hover-calido:#BC1C38;
+    --vx-color-rojo-oscuro:#B71244; --vx-color-rojo-vauxoo:#AC0340;
+    /* Tintes por color-mix sobre la paleta: fondos suaves sin inventar hexes. */
+    --vx-tint-rojo:color-mix(in srgb, var(--vx-color-rojo-vauxoo) 9%, var(--vx-color-blanco));
+    --vx-tint-dorado:color-mix(in srgb, var(--vx-color-dorado) 16%, var(--vx-color-blanco));
+    --vx-tint-gris:color-mix(in srgb, var(--vx-color-gris-medio) 9%, var(--vx-color-blanco));
+    --vx-border-rojo:color-mix(in srgb, var(--vx-color-rojo-vauxoo) 22%, var(--vx-color-blanco));
+    --vx-border-dorado:color-mix(in srgb, var(--vx-color-dorado) 45%, var(--vx-color-blanco));
+    --vx-border-gris:color-mix(in srgb, var(--vx-color-gris-medio) 25%, var(--vx-color-blanco));
+    /* Slots semánticos heredados (red/yellow/green/blue) mapeados SOLO a la
+       paleta oficial. brand.yml no define un verde: "correcto / al día" se pinta
+       con el gris-medio azulado en vez de inventar un color fuera de marca. */
+    --vauxoo:var(--vx-color-rojo-vauxoo); --vauxoo-dk:var(--vx-color-negro-vauxoo);
+    --vauxoo-lt:var(--vx-tint-rojo);
+    --red:var(--vx-color-rojo-vauxoo); --red-lt:var(--vx-tint-rojo);
+    --yellow:var(--vx-color-dorado); --yellow-lt:var(--vx-tint-dorado);
+    --green:var(--vx-color-gris-medio); --green-lt:var(--vx-tint-gris);
+    --blue:var(--vx-color-gris-medio); --blue-lt:var(--vx-color-azul-claro);
+    --grey-lt:var(--vx-color-gris-muy-claro); --border:var(--vx-border-gris);
+  }
+  .doc-title, .section-title, .phase-title, .pending-title { font-family:var(--vx-font-primary,'Sora'), sans-serif; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 18px; border-bottom: 3px solid var(--vauxoo); margin-bottom: 24px; }
+  .brand { display: flex; flex-direction: column; gap: 2px; }
+  /* El logotipo es el SVG oficial inlineado, nunca texto imitando la marca.
+     El ancho lo fija este wrapper; el SVG escala solo por su viewBox. */
+  .brand-logo { width:190px; }
+  .brand-logo svg { width:100%; height:auto; }
+  /* El eslogan cierra la identidad (Manrope SemiBold, pie de página).
+     Nunca es un kicker decorativo ni una etiqueta de sección. */
+  .vx-slogan { font-family:var(--vx-font-secondary,'Manrope'),sans-serif; font-weight:600; font-size:9pt; color:var(--vx-color-negro-vauxoo); letter-spacing:.2px; }
+  .doc-title-block { text-align: right; }
+  .doc-type { font-size: 9pt; color: var(--vx-color-gris-claro); text-transform: uppercase; letter-spacing: 1px; }
+  .doc-title { font-size: 14pt; font-weight: 700; color: var(--vauxoo-dk); line-height: 1.2; margin-top: 3px; }
+  .doc-subtitle { font-size: 9pt; color: var(--vx-color-gris-oscuro); margin-top: 4px; }
+  .meta-box { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 28px; }
+  .meta-box .item { display: flex; gap: 8px; padding: 8px 14px; border-bottom: 1px solid var(--border); background: var(--grey-lt); }
+  .meta-box .item:nth-child(odd) { border-right: 1px solid var(--border); }
+  .meta-box .item:nth-last-child(-n+2) { border-bottom: none; }
+  .meta-label { font-size: 8.5pt; color: var(--vx-color-gris-claro); min-width: 90px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .meta-value { font-size: 9pt; color: var(--vx-color-negro-vauxoo); font-weight: 600; }
+  .section { margin-bottom: 32px; }
+  .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .section-number { background: var(--vauxoo); color: var(--vx-color-blanco); font-size: 9pt; font-weight: 700; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .section-title { font-size: 12pt; font-weight: 700; color: var(--vauxoo-dk); border-bottom: 1.5px solid var(--vauxoo-lt); flex: 1; padding-bottom: 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin-bottom: 14px; }
+  thead th { background: var(--vauxoo); color: var(--vx-color-blanco); padding: 8px 10px; text-align: left; font-weight: 600; font-size: 8.5pt; }
+  tbody tr:nth-child(even) { background: var(--grey-lt); }
+  tbody td { padding: 7px 10px; border-bottom: 1px solid var(--vx-color-gris-humo); vertical-align: top; }
+  tfoot td { padding: 8px 10px; background: var(--vauxoo-lt); font-weight: 700; font-size: 9.5pt; border-top: 2px solid var(--vauxoo); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .bold { font-weight: 700; }
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; letter-spacing: 0.3px; white-space: nowrap; }
+  .badge-red { background: var(--red-lt); color: var(--red); border: 1px solid var(--vx-border-rojo); }
+  .badge-yellow { background: var(--yellow-lt); color: var(--yellow); border: 1px solid var(--vx-border-dorado); }
+  .badge-green { background: var(--green-lt); color: var(--green); border: 1px solid var(--vx-border-gris); }
+  .badge-blue { background: var(--blue-lt); color: var(--blue); border: 1px solid var(--vx-border-gris); }
+  .badge-purple { background: var(--vauxoo-lt); color: var(--vauxoo-dk); border: 1px solid var(--border); }
+  .up { color: var(--red); font-weight: 700; }
+  .down { color: var(--green); font-weight: 700; }
+  .zero { color: var(--blue); font-weight: 700; }
+  .phase-card { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
+  .phase-header { background: var(--vauxoo); color: var(--vx-color-blanco); padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; }
+  .phase-title { font-size: 10.5pt; font-weight: 700; }
+  .phase-body { padding: 14px 16px 10px; }
+  .phase-body table { margin-bottom: 0; }
+  .alert { padding: 10px 14px; border-radius: 5px; font-size: 9pt; margin: 10px 0; border-left: 4px solid; line-height: 1.55; }
+  .alert-warning { background: var(--yellow-lt); border-color: var(--yellow); color: var(--vx-color-negro-vauxoo); }
+  .alert-danger { background: var(--red-lt); border-color: var(--red); color: var(--vx-color-rojo-vauxoo); }
+  .alert-success { background: var(--green-lt); border-color: var(--green); color: var(--vx-color-gris-medio); }
+  .alert-info { background: var(--blue-lt); border-color: var(--blue); color: var(--vx-color-gris-oscuro); }
+  .class-table { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-top: 10px; }
+  .class-table table { margin: 0; }
+  .class-table thead th { background: var(--vx-color-gris-oscuro); font-size: 8pt; }
+  .pending-grid { display: grid; gap: 12px; margin-top: 8px; }
+  .pending-item { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .pending-item-head { background: var(--vauxoo-lt); padding: 7px 14px; display: flex; align-items: center; gap: 10px; }
+  .pending-num { background: var(--vauxoo); color: var(--vx-color-blanco); font-size: 8pt; font-weight: 700; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .pending-title { font-weight: 700; font-size: 9pt; color: var(--vauxoo-dk); }
+  .pending-body { padding: 8px 14px; font-size: 9pt; }
+  .pending-row { display: flex; gap: 8px; margin-bottom: 4px; }
+  .pending-lbl { color: var(--vx-color-gris-claro); min-width: 110px; font-size: 8.5pt; }
+  .footer { margin-top: 40px; padding-top: 14px; border-top: 2px solid var(--vauxoo-lt); display: flex; justify-content: space-between; align-items: flex-end; font-size: 8pt; color: var(--vx-color-gris-claro); }
+  .footer strong { color: var(--vauxoo); }
+  .confidential { background: var(--vauxoo-lt); color: var(--vauxoo-dk); padding: 3px 10px; border-radius: 12px; font-size: 7.5pt; font-weight: 700; letter-spacing: 0.5px; }
+  code { background: var(--grey-lt); border: 1px solid var(--border); border-radius: 3px; padding: 0 4px; font-size: 8.5pt; color: var(--vauxoo-dk); }
+  /* RESPONSIVE — se ve bien en celular y computadora (estándar de la casa) */
+  @media (max-width:720px){
+    body{padding:10px}
+    .page{padding:24px 18px 30px}
+    .header{flex-direction:column;gap:10px}
+    .doc-title-block{text-align:left}
+    .meta-box{grid-template-columns:1fr}
+    .meta-box .item:nth-child(odd){border-right:none}
+    .meta-box .item{border-bottom:1px solid var(--border)}
+    .meta-box .item:last-child{border-bottom:none}
+    .kpi-banner{grid-template-columns:repeat(2,1fr);gap:8px}
+    .two-col{grid-template-columns:1fr}
+    .footer{flex-direction:column;gap:10px;align-items:flex-start}
+    table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  }
+  @media (max-width:400px){.kpi-banner{grid-template-columns:1fr 1fr}}
+  /* INTERACTIVO — toolbar + client validation. Engine: assets/vauxoo-interactive.js (inlined below). */
+  .vx-toolbar { position:sticky; top:0; z-index:50; max-width:860px; margin:0 auto 16px; background:var(--vx-color-gris-muy-claro); color:var(--vx-color-negro-vauxoo); border:1px solid var(--vx-color-gris-humo); border-radius:8px; padding:10px 16px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .vx-toolbar .tt { font-family:var(--vx-font-primary,'Sora'),sans-serif; font-weight:700; font-size:9pt; letter-spacing:.4px; }
+  .vx-toolbar .hint { font-size:8.5pt; color:var(--vx-color-gris-oscuro); margin-right:auto; }
+  .vx-btn { font-family:var(--vx-font-primary,'Sora'),sans-serif; font-weight:700; font-size:9pt; border-radius:7px; padding:8px 13px; cursor:pointer; border:1px solid transparent; }
+  .vx-btn-p { background:var(--vauxoo); color:var(--vx-color-blanco); }
+  .vx-btn-p:hover { background:var(--vx-color-rojo-hover-calido); }
+  .vx-btn-o { background:transparent; color:var(--vx-color-negro-vauxoo); border-color:var(--vx-color-gris-palido); }
+  .vx-chk { display:inline-flex; align-items:center; gap:7px; font-family:var(--vx-font-primary,'Sora'),sans-serif; font-weight:700; font-size:9pt; cursor:pointer; }
+  .vx-chk input { width:16px; height:16px; accent-color:var(--vauxoo); }
+  .vx-cmt { flex:1; min-width:180px; font-family:var(--vx-font-secondary,'Manrope'),sans-serif; font-size:9.5pt; color:var(--vx-color-negro-vauxoo); border:1px solid var(--vx-color-gris-palido); border-radius:7px; padding:7px 10px; }
+  .vx-cmt:focus { outline:2px solid var(--vauxoo); border-color:var(--vauxoo); }
+  textarea.vx-cmt { width:100%; min-height:80px; resize:vertical; }
+  .vx-valgrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin:6px 0 12px; }
+  .vx-field label { display:block; font-family:var(--vx-font-primary,'Sora'),sans-serif; font-weight:700; font-size:8pt; color:var(--vx-color-gris-oscuro); text-transform:uppercase; letter-spacing:.5px; margin-bottom:5px; }
+  .vx-field input, .vx-field select { width:100%; font-family:var(--vx-font-secondary,'Manrope'),sans-serif; font-size:9.5pt; padding:8px 10px; border:1px solid var(--vx-color-gris-palido); border-radius:7px; }
+  .vx-radios { display:flex; gap:8px; flex-wrap:wrap; }
+  .vx-radios label { display:inline-flex; align-items:center; gap:6px; font-size:9.5pt; border:1px solid var(--vx-color-gris-palido); border-radius:12px; padding:6px 12px; cursor:pointer; }
+  @media print { body { background: var(--vx-color-blanco); padding: 0; } .page { padding: 20px 24px; } .phase-card { page-break-inside: avoid; } .no-print { display:none !important; } .vx-cmt, .vx-field input, .vx-field select { border:1px solid var(--vx-color-gris-claro); } }
+  /* Contraste: el dorado es acento y borde, nunca color de texto. */
+  .badge-yellow, .alert-warning, .kpi-card.kpi-yellow .kpi-val { color:var(--vx-color-negro-vauxoo); }
+</style>
+</head>
+<body data-vx-report="diagnosis-{{INSTANCE}}">
+
+<!-- Toolbar (localize labels to the client's language, like the rest of the report) -->
+<div class="vx-toolbar no-print">
+  <span class="tt">Interactive document</span>
+  <span class="hint" data-vx-hint>Your answers are saved in this browser</span>
+  <button type="button" class="vx-btn vx-btn-o" data-vx-action="save">💾 Save answers</button>
+  <button type="button" class="vx-btn vx-btn-o" data-vx-action="download">⬇️ Download answers</button>
+  <button type="button" class="vx-btn vx-btn-p" data-vx-action="print">🖨️ Save as PDF</button>
+</div>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="brand">
+      <div class="brand-logo">
+        <!-- VX_LOGO official-logo-horizontal -->
+      </div>
+    </div>
+    <div class="doc-title-block">
+      <div class="doc-type">Technical-Functional Diagnosis Report</div>
+      <div class="doc-title">{{DOC_TITLE}}</div>
+      <div class="doc-subtitle">{{SUBJECT}}</div>
+    </div>
+  </div>
+
+  <!-- META -->
+  <div class="meta-box">
+    <div class="item"><span class="meta-label">Client</span><span class="meta-value">{{CLIENT}}</span></div>
+    <div class="item"><span class="meta-label">Records</span><span class="meta-value">{{SUBJECT}}</span></div>
+    <div class="item"><span class="meta-label">Date</span><span class="meta-value">{{DATE}}</span></div>
+    <div class="item"><span class="meta-label">Author</span><span class="meta-value">{{ANALYST}}</span></div>
+    <div class="item"><span class="meta-label">Instance</span><span class="meta-value">{{INSTANCE}}</span></div>
+    <div class="item"><span class="meta-label">Status</span><span class="meta-value confidential">CONFIDENTIAL</span></div>
+  </div>
+
+  <!-- §0 CONTEXT & QUERY -->
+  <div class="section">
+    <div class="section-header"><div class="section-number">0</div><div class="section-title">Context &amp; Query</div></div>
+    <p style="font-size:10pt;line-height:1.7;margin-bottom:10px;">[P1 — What the client reported and the exact question they asked. Quote the symptom they observed.]</p>
+    <p style="font-size:10pt;line-height:1.7;margin-bottom:10px;">[P2 — Where the behavior originates, in one paragraph of plain language.]</p>
+    <div class="alert alert-info" style="margin-top:14px;">
+      <strong>Verdict (executive summary):</strong> [One-line verdict: bug or not, and the bottom line — e.g. "Not a bug; both orders are fully collected." Mention that the chatter backs it documentarily.]
+    </div>
+  </div>
+
+  <!-- §1 IS IT A BUG? -->
+  <div class="section">
+    <div class="section-header"><div class="section-number">1</div><div class="section-title">Is it a bug? How the system computes this</div></div>
+    <p style="font-size:10pt;line-height:1.7;margin-bottom:12px;">[Explain the mechanism behind the field/behavior the client questioned — e.g. a computed field, its inputs, and the rule that produced the observed value.]</p>
+    <table>
+      <thead><tr><th>Concept</th><th>Computation rule</th></tr></thead>
+      <tbody>
+        <tr><td class="bold">[field A]</td><td>[how it is derived]</td></tr>
+        <tr><td class="bold">[field B]</td><td>[how it is derived]</td></tr>
+        <tr><td class="bold">[observed state]</td><td>[the rule that yields the state the client sees]</td></tr>
+      </tbody>
+    </table>
+    <div class="alert alert-success">
+      <strong>Conclusion:</strong> [Verdict with reasoning. Pick the matching badge:]
+      <span class="badge badge-green">Not a bug · expected behavior</span>
+    </div>
+  </div>
+
+  <!-- §2 DETAIL PER RECORD (repeat .phase-card per record) -->
+  <div class="section">
+    <div class="section-header"><div class="section-number">2</div><div class="section-title">Detail by record</div></div>
+
+    <div class="phase-card">
+      <div class="phase-header">
+        <div class="phase-title">[RECORD — e.g. S03563 · ISLA 17]</div>
+        <span class="badge badge-yellow">[state badge]</span>
+      </div>
+      <div class="phase-body">
+        <p style="font-size:9pt;color:var(--vx-color-gris-oscuro);line-height:1.55;margin-bottom:10px;"><strong>Cause:</strong> [root cause for THIS record, one or two lines].</p>
+        <!-- Evidence table (data that proves the cause) -->
+        <table>
+          <thead><tr><th>Document</th><th>Type</th><th>Date</th><th class="num">Qty</th><th class="num">Amount</th></tr></thead>
+          <tbody>
+            <tr><td>[doc]</td><td>[type]</td><td>[date]</td><td class="num">[qty]</td><td class="num">[amount]</td></tr>
+          </tbody>
+          <tfoot><tr><td colspan="3"><strong>[net]</strong></td><td class="num zero">[qty]</td><td class="num">[amount]</td></tr></tfoot>
+        </table>
+        <div class="alert alert-warning">[Plain-language explanation of how the manual action produced the observed state.]</div>
+        <!-- Traceability from chatter (the business "why") -->
+        <div class="class-table">
+          <table>
+            <thead><tr><th>Date</th><th>Who</th><th>Evidence in the chatter</th></tr></thead>
+            <tbody>
+              <tr><td>[date]</td><td>[author]</td><td>[quoted/paraphrased chatter message that explains the decision]</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="alert alert-info" style="margin-top:10px;"><strong>Reconciliation:</strong> [tie the numbers together — e.g. order total = net invoiced → fully collected].</div>
+      </div>
+    </div>
+    <!-- /phase-card -->
+
+  </div>
+
+  <!-- §3 CONSOLIDATED -->
+  <div class="section">
+    <div class="section-header"><div class="section-number">3</div><div class="section-title">Consolidated</div></div>
+    <table>
+      <thead><tr><th>Record</th><th>Subject</th><th>Cause</th><th class="num">Settled?</th><th>Bug?</th></tr></thead>
+      <tbody>
+        <tr><td class="bold">[record]</td><td>[subject]</td><td>[cause]</td><td class="num down">[yes/no + figure]</td><td><span class="badge badge-green">No</span></td></tr>
+      </tbody>
+    </table>
+    <div class="alert alert-success">[One-paragraph synthesis: common root cause, settlement status, and the headline recommendation.]</div>
+  </div>
+
+  <!-- §4 OPTIONS BY NEED -->
+  <div class="section">
+    <div class="section-header"><div class="section-number">4</div><div class="section-title">Options by need</div></div>
+    <p style="font-size:10pt;line-height:1.7;margin-bottom:6px;">[State the premise and the goal, then list options from fastest to most robust. Always flag any option that risks harm — e.g. double billing.]</p>
+    <div class="pending-grid">
+      <div class="pending-item">
+        <div class="pending-item-head"><div class="pending-num">1</div><div class="pending-title">[Option title — e.g. "Server action — force the state (fast)"]</div></div>
+        <div class="pending-body">
+          <div class="pending-row"><span class="pending-lbl">Applies to</span><span>[records]</span></div>
+          <div class="pending-row"><span class="pending-lbl">What to do</span><span>[concrete step]</span></div>
+          <div class="pending-row"><span class="pending-lbl">⚠ Caveat</span><span>[risk / side effect — e.g. stored computed field may recompute]</span></div>
+          <div class="pending-row"><span class="pending-lbl">Impact</span><span class="down">[accounting impact]</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLIENT VALIDATION (interactive; localize labels) -->
+  <div class="section">
+    <div class="section-header"><div class="section-number">✓</div><div class="section-title">Client validation &amp; comments</div></div>
+    <div class="vx-valgrid">
+      <div class="vx-field"><label>Reviewed by</label><input type="text" data-vx-field="val_name" placeholder="Name & role"></div>
+      <div class="vx-field"><label>Review date</label><input type="date" data-vx-field="val_date"></div>
+      <div class="vx-field"><label>Decision</label>
+        <div class="vx-radios">
+          <label><input type="radio" name="vdict" data-vx-field="val_decision" value="Accepted"> Accepted</label>
+          <label><input type="radio" name="vdict" data-vx-field="val_decision" value="Accepted with notes"> With notes</label>
+          <label><input type="radio" name="vdict" data-vx-field="val_decision" value="Rejected"> Rejected</label>
+        </div>
+      </div>
+    </div>
+    <label class="vx-chk"><input type="checkbox" data-vx-field="val_agree"> I acknowledge the findings of this diagnosis</label>
+    <div style="margin-top:10px;"><textarea class="vx-cmt" data-vx-field="val_notes" placeholder="Comments or instructions for Vauxoo…"></textarea></div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div><span class="vx-slogan">Let's Build Something Great</span><br><strong>VAUXOO</strong> &nbsp;·&nbsp; Odoo Consulting &nbsp;·&nbsp; www.vauxoo.com<br><span>Prepared by {{ANALYST}}</span></div>
+    <div style="text-align:right;"><span class="confidential">CONFIDENTIAL</span><br><span style="margin-top:4px;display:block;">{{DATE}} · {{VERSION}}</span></div>
+  </div>
+
+</div>
+
+<!-- Interactive engine — copy of resources/templates/vauxoo-interactive.js -->
+<script>
+(function(){"use strict";
+  function rid(){var e=document.querySelector("[data-vx-report]");return (e&&e.getAttribute("data-vx-report"))||"vx-report";}
+  function key(){return "vxr:"+rid();}
+  function fs(){return Array.prototype.slice.call(document.querySelectorAll("[data-vx-field]"));}
+  function collect(){var o={};fs().forEach(function(el){var k=el.getAttribute("data-vx-field");if(el.type==="checkbox")o[k]=el.checked;else if(el.type==="radio"){if(el.checked)o[k]=el.value;}else o[k]=el.value;});return o;}
+  function apply(d){if(!d)return;fs().forEach(function(el){var k=el.getAttribute("data-vx-field");if(!(k in d))return;if(el.type==="checkbox")el.checked=!!d[k];else if(el.type==="radio")el.checked=(el.value===d[k]);else el.value=d[k];});}
+  function hint(m){var h=document.querySelector("[data-vx-hint]");if(h)h.textContent=m;}
+  function save(){try{localStorage.setItem(key(),JSON.stringify(collect()));}catch(e){}hint("Saved ✓ "+new Date().toLocaleTimeString());}
+  function restore(){var r;try{r=localStorage.getItem(key());}catch(e){return;}if(!r)return;try{apply(JSON.parse(r));}catch(e){}}
+  function download(){var d=collect();d._report=rid();d._title=document.title;d._exported=new Date().toISOString();var b=new Blob([JSON.stringify(d,null,2)],{type:"application/json"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=rid()+"_answers_"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();document.body.removeChild(a);hint("Answers downloaded ✓");}
+  function wire(){document.addEventListener("click",function(ev){var t=ev.target.closest?ev.target.closest("[data-vx-action]"):null;if(!t)return;var a=t.getAttribute("data-vx-action");if(a==="save")save();else if(a==="download")download();else if(a==="print")window.print();});document.addEventListener("input",function(ev){if(ev.target&&ev.target.hasAttribute&&ev.target.hasAttribute("data-vx-field"))hint("Unsaved changes…");});}
+  window.vxReport={save:save,download:download,print:function(){window.print();},restore:restore,collect:collect};
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",function(){restore();wire();});else{restore();wire();}
+})();
+</script>
+</body>
+</html>

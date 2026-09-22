@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>{{TITULO_DOC}}</title>
+<style>
+  body { font-family: 'Manrope', Arial, sans-serif; color: #27282F; font-size: 11pt; line-height: 1.5; }
+  h1 { font-family: 'Sora', Arial, sans-serif; color: #AC0340; font-size: 20pt; font-weight: 700; margin-bottom: 4px; }
+  .subtitulo { font-family: 'Manrope', Arial, sans-serif; color: #95999F; font-size: 11pt; margin-top: 0; margin-bottom: 20px; }
+  h2 { font-family: 'Sora', Arial, sans-serif; color: #AC0340; font-size: 13pt; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; border-bottom: 2px solid #AC0340; padding-bottom: 4px; margin-top: 28px; margin-bottom: 10px; }
+  table { border-collapse: collapse; width: 100%; margin-bottom: 10px; }
+  .tabla-encabezado td { padding: 6px 10px; border: 1px solid #E0E0E0; vertical-align: top; }
+  .tabla-encabezado td.etiqueta { background-color: #F5F5F5; font-weight: 700; width: 220px; color: #282C2F; }
+  .tabla-pendientes th { background-color: #AC0340; color: #FFFFFF; font-family: 'Sora', Arial, sans-serif; font-weight: 600; padding: 8px 10px; text-align: left; border: 1px solid #AC0340; }
+  .tabla-pendientes td { padding: 8px 10px; border: 1px solid #E0E0E0; vertical-align: top; }
+  .tabla-pendientes tr:nth-child(even) td { background-color: #F5F5F5; }
+  ul, ol { margin-top: 0; margin-bottom: 10px; padding-left: 22px; }
+  li { margin-bottom: 4px; }
+  p { margin-top: 0; margin-bottom: 10px; }
+  .nota-revision { color: #95999F; font-size: 9.5pt; font-style: italic; margin-top: 30px; border-top: 1px solid #E0E0E0; padding-top: 10px; }
+</style>
+</head>
+<body>
+
+<h1>Minuta de Reunión</h1>
+<p class="subtitulo">{{PROYECTO}}</p>
+
+<table class="tabla-encabezado">
+  <tr><td class="etiqueta">Proyecto</td><td>{{PROYECTO}}</td></tr>
+  <tr><td class="etiqueta">Fecha de la Reunión</td><td>{{FECHA_REUNION}}</td></tr>
+  <tr><td class="etiqueta">Objetivo General de la Reunión</td><td>{{OBJETIVO_GENERAL}}</td></tr>
+  <tr><td class="etiqueta">Cambios Relevantes en la Agenda</td><td>{{CAMBIOS_AGENDA}}</td></tr>
+  {{FILA_GRABACION}}
+</table>
+
+<h2>Introducción (Resumen Ejecutivo)</h2>
+{{RESUMEN_EJECUTIVO}}
+
+<h2>Asistentes</h2>
+{{LISTA_ASISTENTES}}
+
+<h2>Orden del Día (Temas Tratados)</h2>
+{{ORDEN_DEL_DIA}}
+
+<h2>Acuerdos Logrados</h2>
+{{ACUERDOS_LOGRADOS}}
+
+<h2>Pendientes (Acciones a Realizar)</h2>
+<table class="tabla-pendientes">
+  <tr><th>#</th><th>Tarea Pendiente</th><th>Responsable</th><th>Fecha Comprometida</th></tr>
+  {{FILAS_PENDIENTES}}
+</table>
+
+<p class="nota-revision">Minuta generada por IA a partir de la transcripción de la llamada. Revisar antes de enviar al cliente.</p>
+
+</body>
+</html>
